@@ -7,7 +7,7 @@ http = urllib3.PoolManager()
 req = http.request("GET", eurovision_url)
 soup = BeautifulSoup(req.data, "html.parser")
 
-# Extract links from only the history-by-year div
+# Extract links from only the event-entry table cells
 cells = soup.findAll("td", {"class": "event-entry"})
 links = list()
 for cell in cells:
@@ -23,4 +23,29 @@ for link in links:
 print(str(len(events)) + " events found")
 
 for event in events:
-    print(event)
+    print("Parsing: http://www.eurovision.tv/" + event)
+    event_req = http.request("GET", "http://www.eurovision.tv/" + event)
+    event_soup = BeautifulSoup(event_req.data, "html.parser")
+
+    # Extract vote cells from a list of all based on title
+    table_cells = event_soup.findAll("td")
+    votes = list()
+    for cell in table_cells:
+        if "goes to" in str(cell.get("title")):
+            # Extract vote details from cell title
+            vote_text = cell.get("title").split(" goes to ")
+
+            # Extract points integer string and assign as 0 if blank
+            points = vote_text[0].split(" from ")[0].split("pt")[0]
+            points = "0" if points == "" else points
+
+            voter = vote_text[0].split(" from ")[1]
+            contestant = vote_text[len(vote_text)-1]
+
+            if not voter == contestant:
+                vote = {"voter": voter, "contestant": contestant, "points": int(points)}
+                votes.append(vote)
+
+    for vote in votes:
+        print(vote)
+    exit()
