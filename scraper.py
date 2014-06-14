@@ -22,30 +22,29 @@ for link in links:
 
 print(str(len(events)) + " events found")
 
+event_results = []
 for event in events:
     print("Parsing: http://www.eurovision.tv/" + event)
     event_req = http.request("GET", "http://www.eurovision.tv/" + event)
     event_soup = BeautifulSoup(event_req.data, "html.parser")
 
+    # Extract hosting country
+    event_location = event_soup.find("p", {"class": "location"}).find("a").contents[0]
+
     # Extract vote cells from a list of all based on title
     table_cells = event_soup.findAll("td")
     votes = list()
     for cell in table_cells:
+        # Title format is typically:
+        # 3pt from Country goes to Other Country
         if "goes to" in str(cell.get("title")):
             # Extract vote details from cell title
             vote_text = cell.get("title").split(" goes to ")
-
-            # Extract points integer string and assign as 0 if blank
             points = vote_text[0].split(" from ")[0].split("pt")[0]
-            points = "0" if points == "" else points
-
             voter = vote_text[0].split(" from ")[1]
             contestant = vote_text[len(vote_text)-1]
 
-            if not voter == contestant:
+            if not voter == contestant and not points == "":
                 vote = {"voter": voter, "contestant": contestant, "points": int(points)}
                 votes.append(vote)
-
-    for vote in votes:
-        print(vote)
-    exit()
+                print(vote)
