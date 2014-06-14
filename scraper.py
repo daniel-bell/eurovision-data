@@ -1,5 +1,6 @@
 import urllib3
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 # Download and parse main results history page
 eurovision_url = "http://www.eurovision.tv/page/history/year"
@@ -27,6 +28,10 @@ for event in events:
     print("Parsing: http://www.eurovision.tv/" + event)
     event_req = http.request("GET", "http://www.eurovision.tv/" + event)
     event_soup = BeautifulSoup(event_req.data, "html.parser")
+
+    # Extract date
+    string_date = event_soup.find("p", {"class": "info"})
+    event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y')
 
     # Extract hosting country
     event_location = event_soup.find("p", {"class": "location"}).find("a").contents[0]
