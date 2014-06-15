@@ -31,8 +31,8 @@ for event in events:
     event_soup = BeautifulSoup(event_req.data, "html.parser")
 
     # Extract list of participants
-    participant_cells = event_soup.findAll("td", {"class": "country"})
-    participants = [cell.contents[0].contents[0] for cell in participant_cells]
+    participant_cells = event_soup.find("div", {"class": "participants"}).findAll("td", {"class": "country"})
+    countries = {cell.contents[0].contents[0]: {"performing": True, "votes": []} for cell in participant_cells}
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
@@ -43,7 +43,7 @@ for event in events:
 
     # Extract vote cells from a list of all based on title
     table_cells = event_soup.findAll("td")
-    votes = list()
+    votes = {}
     for cell in table_cells:
         # Title format is typically:
         # 3pt from Country goes to Other Country
@@ -55,17 +55,24 @@ for event in events:
             contestant = vote_text[len(vote_text) - 1]
 
             if not voter == contestant and not points == "":
-                vote = {"voter": voter, "contestant": contestant, "points": int(points)}
-                votes.append(vote)
+                # Check to see if voter is not a participant and add if they don't exist yet
+                try:
+                    x = countries[voter]
+                except KeyError:
+                    countries[voter] = {"performing": False, "votes": []}
+
+                vote = {"target": contestant, "points": int(points)}
+                countries[voter]["votes"].append(vote)
 
     # Build a map of the event to allow for easy JSON translation
-    event_data = {"host": event_location, "date": event_date, "participants": participants, "votes": votes}
+    event_data = {"host": event_location, "date": event_date, "participants": countries}
     event_results.append(event_data)
 
 event_results.sort(key=lambda e: e['date'])
 
+# Open a file and dump the beautified JSON of the events into it
 f = open("out.out", "w")
 try:
-    json.dump(event_results, f)
+    json.dump(event_results, f, sort_keys=True, indent=4)
 finally:
     f.close()
