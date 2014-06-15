@@ -41,6 +41,9 @@ for event in events:
     # Extract hosting country
     event_location = event_soup.find("p", {"class": "location"}).find("a").contents[0]
 
+    # Extract winner
+    event_winner = event_soup.find("p", {"class": "winner"}).findAll("a")[1].contents[0]
+
     # Extract vote cells from a list of all based on title
     table_cells = event_soup.findAll("td")
     votes = {}
@@ -65,14 +68,14 @@ for event in events:
                 countries[voter]["votes"].append(vote)
 
     # Build a map of the event to allow for easy JSON translation
-    event_data = {"host": event_location, "date": event_date, "participants": countries}
+    event_data = {"host": event_location, "date": event_date, "winner": event_winner, "participants": countries}
     event_results.append(event_data)
 
 event_results.sort(key=lambda e: e['date'])
 
 # Open a file and dump the beautified JSON of the events into it
-f = open("out.out", "w")
+f = open("results.json", "w")
 try:
-    json.dump(event_results, f, sort_keys=True, indent=4)
+    json.dump(event_results, f, indent=4)
 finally:
     f.close()
