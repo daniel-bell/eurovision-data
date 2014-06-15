@@ -29,6 +29,10 @@ for event in events:
     event_req = http.request("GET", "http://www.eurovision.tv/" + event)
     event_soup = BeautifulSoup(event_req.data, "html.parser")
 
+    # Extract list of participants
+    participant_cells = event_soup.findAll("td", {"class": "country"})
+    participants = [cell.contents[0].contents[0] for cell in participant_cells]
+
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
     event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y')
@@ -47,9 +51,12 @@ for event in events:
             vote_text = cell.get("title").split(" goes to ")
             points = vote_text[0].split(" from ")[0].split("pt")[0]
             voter = vote_text[0].split(" from ")[1]
-            contestant = vote_text[len(vote_text)-1]
+            contestant = vote_text[len(vote_text) - 1]
 
             if not voter == contestant and not points == "":
                 vote = {"voter": voter, "contestant": contestant, "points": int(points)}
                 votes.append(vote)
-                print(vote)
+
+    # Build a map of the event to allow for easy JSON translation
+    event_data = {"host": event_location, "date": event_date, "participants": participants, "votes": votes}
+    event_results.append(event_data)
