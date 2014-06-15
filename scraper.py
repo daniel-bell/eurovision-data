@@ -1,4 +1,5 @@
 import urllib3
+import json
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -35,7 +36,7 @@ for event in events:
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
-    event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y')
+    event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y').strftime("%Y-%m-%d")
 
     # Extract hosting country
     event_location = event_soup.find("p", {"class": "location"}).find("a").contents[0]
@@ -60,3 +61,11 @@ for event in events:
     # Build a map of the event to allow for easy JSON translation
     event_data = {"host": event_location, "date": event_date, "participants": participants, "votes": votes}
     event_results.append(event_data)
+
+event_results.sort(key=lambda e: e['date'])
+
+f = open("out.out", "w")
+try:
+    json.dump(event_results, f)
+finally:
+    f.close()
