@@ -24,7 +24,7 @@ for link in links:
 
 print(str(len(events)) + " events found")
 
-event_results = []
+event_results = {}
 for event in events:
     print("Parsing: http://www.eurovision.tv/" + event)
     event_req = http.request("GET", "http://www.eurovision.tv/" + event)
@@ -36,7 +36,7 @@ for event in events:
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
-    event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y').strftime("%Y-%m-%d")
+    event_date = datetime.strptime(string_date.contents[0], '%A %d %B %Y')
 
     # Extract hosting country
     event_location = event_soup.find("p", {"class": "location"}).find("a").contents[0]
@@ -68,14 +68,12 @@ for event in events:
                 countries[voter]["votes"].append(vote)
 
     # Build a map of the event to allow for easy JSON translation
-    event_data = {"host": event_location, "date": event_date, "winner": event_winner, "participants": countries}
-    event_results.append(event_data)
-
-event_results.sort(key=lambda e: e['date'])
+    event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner, "participants": countries}
+    event_results[str(event_date.year)] = event_data
 
 # Open a file and dump the beautified JSON of the events into it
 f = open("results.json", "w")
 try:
-    json.dump(event_results, f, indent=4)
+    json.dump(event_results, f, sort_keys=True)
 finally:
     f.close()
