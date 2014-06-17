@@ -32,7 +32,7 @@ for event in events:
 
     # Extract list of participants
     participant_cells = event_soup.find("div", {"class": "participants"}).findAll("td", {"class": "country"})
-    countries = {cell.contents[0].contents[0]: {"performing": True, "votes": []} for cell in participant_cells}
+    countries = {cell.contents[0].contents[0]: {"performing": True, "votes": {}} for cell in participant_cells}
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
@@ -46,7 +46,6 @@ for event in events:
 
     # Extract vote cells from a list of all based on title
     table_cells = event_soup.findAll("td")
-    votes = {}
     for cell in table_cells:
         # Title format is typically:
         # 3pt from Country goes to Other Country
@@ -62,10 +61,9 @@ for event in events:
                 try:
                     x = countries[contestant]
                 except KeyError:
-                    countries[contestant] = {"performing": False, "votes": []}
+                    countries[contestant] = {"performing": False, "votes": {}}
 
-                vote = {"voter": contestant, "points": int(points)}
-                countries[contestant]["votes"].append(vote)
+                countries[contestant]["votes"][contestant] = int(points)
 
     # Build a map of the event to allow for easy JSON translation
     event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner, "participants": countries}
