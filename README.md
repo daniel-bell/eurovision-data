@@ -14,11 +14,11 @@ The data included is as follows:
 * Winning country
 * List of participant Countries
     * Whether they are performing
-    * The points they've awarded to other countries
+    * The points they've been awarded by other countries
 
 ## Requirements
 
 None if you wish to use the JSON. If you wish to extract the data yourself then the following Python packages need to be installed:
 
 * [urllib3](https://pypi.python.org/pypi/urllib3)
-* [bs4](https://pypi.python.org/pypi/beautifulsoup4/)
+* [beautifulsoup4](https://pypi.python.org/pypi/beautifulsoup4/)

@@ -60,12 +60,12 @@ for event in events:
             if not voter == contestant and not points == "":
                 # Check to see if voter is not a participant and add if they don't exist yet
                 try:
-                    x = countries[voter]
+                    x = countries[contestant]
                 except KeyError:
-                    countries[voter] = {"performing": False, "votes": []}
+                    countries[contestant] = {"performing": False, "votes": []}
 
-                vote = {"target": contestant, "points": int(points)}
-                countries[voter]["votes"].append(vote)
+                vote = {"voter": contestant, "points": int(points)}
+                countries[contestant]["votes"].append(vote)
 
     # Build a map of the event to allow for easy JSON translation
     event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner, "participants": countries}
@@ -73,7 +73,4 @@ for event in events:
 
 # Open a file and dump the beautified JSON of the events into it
 f = open("results.json", "w")
-try:
-    json.dump(event_results, f, sort_keys=True)
-finally:
-    f.close()
+json.dump(event_results, f, sort_keys=True)
