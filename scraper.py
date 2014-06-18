@@ -1,7 +1,37 @@
 import urllib3
 import json
+import pycountry
 from bs4 import BeautifulSoup
 from datetime import datetime
+import pycountry
+
+""" Edge case countries because the Eurovision website does not
+format some countries the same as pycountry """
+country_mappings = {
+    "Russia": "RUS",
+    "Serbia and Montenegro": "SRB",
+    "Yugoslavia": "YUG",
+    "F.Y.R. Macedonia": "MKD",
+    "Moldova": "MDA"
+}
+
+
+def convert_country(country_name):
+    """ Converts a country name into the ISO-3166 code """
+    country_name = country_name.replace("&", "and")
+
+    # Strip leading "The" from some country names
+    if country_name[:4] == "The ":
+        country_name = country_name[4:]
+
+    # Try and convert country name to alpha3 code, otherwise fall back
+    # to edge case mapping
+    try:
+        country_code = pycountry.countries.get(name=country_name).alpha3
+    except KeyError:
+        country_code = country_mappings[country_name]
+
+    return country_code
 
 # Download and parse main results history page
 eurovision_url = "http://www.eurovision.tv/page/history/year"
@@ -32,7 +62,12 @@ for event in events:
 
     # Extract list of participants
     participant_cells = event_soup.find("div", {"class": "participants"}).findAll("td", {"class": "country"})
-    countries = {cell.contents[0].contents[0]: {"performing": True, "votes": {}} for cell in participant_cells}
+
+    # Extract map of countries that are performing, including their alpha3 country code
+    countries = {}
+    for cell in participant_cells:
+        country_code = convert_country(cell.contents[0].contents[0])
+        countries[country_code] = {"performing": True, "votes": {}}
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
@@ -59,14 +94,15 @@ for event in events:
             if not voter == contestant and not points == "":
                 # Check to see if voter is not a participant and add if they don't exist yet
                 try:
-                    x = countries[contestant]
+                    x = countries[convert_country(contestant)]
                 except KeyError:
                     countries[contestant] = {"performing": False, "votes": {}}
 
-                countries[contestant]["votes"][contestant] = int(points)
+                countries[convert_country(contestant)]["votes"][convert_country(voter)] = int(points)
 
     # Build a map of the event to allow for easy JSON translation
-    event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner, "participants": countries}
+    event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner,
+                  "participants": countries}
     event_results[str(event_date.year)] = event_data
 
 # Open a file and dump the beautified JSON of the events into it
