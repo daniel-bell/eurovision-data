@@ -8,11 +8,11 @@ import pycountry
 """ Edge case countries because the Eurovision website does not
 format some countries the same as pycountry """
 country_mappings = {
-    "Russia": "ru",
-    "Serbia and Montenegro": "ss",
-    "Yugoslavia": "ss",
-    "F.Y.R. Macedonia": "mk",
-    "Moldova": "md"
+    "Russia": "RU",
+    "Serbia and Montenegro": "SS",
+    "Yugoslavia": "SS",
+    "F.Y.R. Macedonia": "MK",
+    "Moldova": "MD"
 }
 
 
