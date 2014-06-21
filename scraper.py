@@ -8,11 +8,11 @@ import pycountry
 """ Edge case countries because the Eurovision website does not
 format some countries the same as pycountry """
 country_mappings = {
-    "Russia": "RUS",
-    "Serbia and Montenegro": "SRB",
-    "Yugoslavia": "YUG",
-    "F.Y.R. Macedonia": "MKD",
-    "Moldova": "MDA"
+    "Russia": "ru",
+    "Serbia and Montenegro": "ss",
+    "Yugoslavia": "ss",
+    "F.Y.R. Macedonia": "mk",
+    "Moldova": "md"
 }
 
 
@@ -24,10 +24,10 @@ def convert_country(country_name):
     if country_name[:4] == "The ":
         country_name = country_name[4:]
 
-    # Try and convert country name to alpha3 code, otherwise fall back
+    # Try and convert country name to alpha2 code, otherwise fall back
     # to edge case mapping
     try:
-        country_code = pycountry.countries.get(name=country_name).alpha3
+        country_code = pycountry.countries.get(name=country_name).alpha2
     except KeyError:
         country_code = country_mappings[country_name]
 
