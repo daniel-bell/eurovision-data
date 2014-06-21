@@ -55,6 +55,7 @@ for link in links:
 print(str(len(events)) + " events found")
 
 event_results = {}
+all_countries = {}
 for event in events:
     print("Parsing: http://www.eurovision.tv/" + event)
     event_req = http.request("GET", "http://www.eurovision.tv/" + event)
@@ -66,8 +67,10 @@ for event in events:
     # Extract map of countries that are performing, including their alpha3 country code
     countries = {}
     for cell in participant_cells:
-        country_code = convert_country(cell.contents[0].contents[0])
+        country_name = cell.contents[0].contents[0]
+        country_code = convert_country(country_name)
         countries[country_code] = {"performing": True, "votes": {}}
+        all_countries[country_code] = country_name
 
     # Extract date
     string_date = event_soup.find("p", {"class": "info"})
@@ -91,19 +94,25 @@ for event in events:
             voter = vote_text[0].split(" from ")[1]
             contestant = vote_text[len(vote_text) - 1]
 
-            if not voter == contestant and not points == "":
-                # Check to see if voter is not a participant and add if they don't exist yet
-                try:
-                    x = countries[convert_country(contestant)]
-                except KeyError:
-                    countries[contestant] = {"performing": False, "votes": {}}
+            # Check to see if voter is not a participant and add if they don't exist yet
+            try:
+                x = countries[convert_country(voter)]
+            except KeyError:
+                countries[convert_country(voter)] = {"performing": False}
+                all_countries[convert_country(voter)] = voter
 
+            # Add the voter to the current country, if they assigned points
+            if not voter == contestant and not points == "":
                 countries[convert_country(contestant)]["votes"][convert_country(voter)] = int(points)
 
     # Build a map of the event to allow for easy JSON translation
     event_data = {"host": event_location, "date": event_date.strftime("%Y-%m-%d"), "winner": event_winner,
                   "participants": countries}
     event_results[str(event_date.year)] = event_data
+
+# Dump the country->alpha3 code map to a file for easy access by the end user
+with  open("countries.json", "w") as country_file:
+    json.dump(all_countries, country_file, sort_keys=True)
 
 # Open a file and dump the beautified JSON of the events into it
 f = open("results.json", "w")
